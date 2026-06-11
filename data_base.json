@@ -1,0 +1,71 @@
+{
+  "sql_v1.0": {
+    "sql": "-- ============================================\n-- 文章表：存储采集到的原始文章元数据\n-- ============================================\nCREATE TABLE IF NOT EXISTS articles (\n    -- 自增主键，唯一标识一篇文章\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    \n    -- 文章原始URL，唯一约束防止重复收录\n    url TEXT UNIQUE NOT NULL,\n    \n    -- 文章标题，解析后提取\n    title TEXT,\n    \n    -- 本地保存路径，指向output/下的文件夹\n    local_path TEXT,\n    \n    -- 收录时间，ISO格式字符串\n    created_at TEXT,\n    \n    -- 来源类型：weixin/csdn/zhihu/unknown\n    source TEXT\n    -- 下载状态：成功为1,失败为0\n    status INTEGER\n);\n\n-- ============================================\n-- 标签定义表：存储两级分类体系\n-- ============================================\nCREATE TABLE IF NOT EXISTS labels (\n    -- 自增主键\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    \n    -- 业务编码：一级为A-H，二级为A01/A02等\n    code TEXT UNIQUE NOT NULL,\n    \n    -- 层级：0=一级分类，1=二级标签\n    level INTEGER NOT NULL,\n    \n    -- 父级编码：一级为NULL，二级指向父级code\n    parent_code TEXT,\n    \n    -- 标签显示名称\n    label TEXT NOT NULL,\n    \n    -- 标签描述，可补充说明适用范围\n    description TEXT\n);\n\n-- ============================================\n-- 文章标签关联表：支持一篇文章打多个标签（多选）\n-- ============================================\nCREATE TABLE IF NOT EXISTS article_labels (\n    -- 自增主键\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    \n    -- 外键：关联articles.id\n    article_id INTEGER NOT NULL,\n    \n    -- 外键：关联labels.id\n    label_id INTEGER NOT NULL,\n    \n    -- 冗余字段：文章标题，避免查询时JOIN\n    article TEXT,\n    \n    -- 冗余字段：标签名称，避免查询时JOIN\n    label TEXT,\n    \n    -- 级联删除：文章或标签删除时自动清理关联\n    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,\n    FOREIGN KEY (label_id) REFERENCES labels(id) ON DELETE CASCADE,\n    \n    -- 联合唯一约束：同一文章同一标签只能出现一次\n    UNIQUE(article_id, label_id)\n);\n\n-- ============================================\n-- 常用查询索引，加速检索\n-- ============================================\n-- 按URL快速查找文章\nCREATE INDEX IF NOT EXISTS idx_articles_url ON articles(url);\n\n-- 按来源筛选文章（如只看微信公众号）\nCREATE INDEX IF NOT EXISTS idx_articles_source ON articles(source);\n\n-- 按编码快速定位标签\nCREATE INDEX IF NOT EXISTS idx_labels_code ON labels(code);\n\n-- 按父级编码查询二级标签（如查A下的所有子标签）\nCREATE INDEX IF NOT EXISTS idx_labels_parent_code ON labels(parent_code);\n\n-- 按文章ID查其所有标签\nCREATE INDEX IF NOT EXISTS idx_article_labels_article_id ON article_labels(article_id);\n\n-- 按标签ID查所有关联文章\nCREATE INDEX IF NOT EXISTS idx_article_labels_label_id ON article_labels(label_id);",
+    "label": [
+      {"level": 0, "code": "A", "label": "人工智能", "parent_code": -1},
+      {"level": 1, "code": "A01", "label": "大模型技术", "parent_code": "A"},
+      {"level": 1, "code": "A02", "label": "AI Agent架构", "parent_code": "A"},
+      {"level": 1, "code": "A03", "label": "AIGC应用", "parent_code": "A"},
+      {"level": 1, "code": "A04", "label": "人形机器人", "parent_code": "A"},
+      {"level": 1, "code": "A05", "label": "算力与芯片", "parent_code": "A"},
+      {"level": 1, "code": "A06", "label": "开源模型部署", "parent_code": "A"},
+      {"level": 1, "code": "A07", "label": "多模态", "parent_code": "A"},
+      {"level": 1, "code": "A08", "label": "AI安全与伦理", "parent_code": "A"},
+
+      {"level": 0, "code": "B", "label": "编程技术", "parent_code": -1},
+      {"level": 1, "code": "B01", "label": "Python进阶", "parent_code": "B"},
+      {"level": 1, "code": "B02", "label": "PyQt界面开发", "parent_code": "B"},
+      {"level": 1, "code": "B03", "label": "数据库设计", "parent_code": "B"},
+      {"level": 1, "code": "B04", "label": "Web后端", "parent_code": "B"},
+      {"level": 1, "code": "B05", "label": "爬虫与自动化", "parent_code": "B"},
+      {"level": 1, "code": "B06", "label": "Docker与部署", "parent_code": "B"},
+      {"level": 1, "code": "B07", "label": "算法与数据结构", "parent_code": "B"},
+      {"level": 1, "code": "B08", "label": "开源项目实践", "parent_code": "B"},
+
+      {"level": 0, "code": "C", "label": "投资理财", "parent_code": -1},
+      {"level": 1, "code": "C01", "label": "个股深度分析", "parent_code": "C"},
+      {"level": 1, "code": "C02", "label": "技术指标", "parent_code": "C"},
+      {"level": 1, "code": "C03", "label": "宏观策略", "parent_code": "C"},
+      {"level": 1, "code": "C04", "label": "AI与机器人赛道", "parent_code": "C"},
+      {"level": 1, "code": "C05", "label": "新能源产业链", "parent_code": "C"},
+      {"level": 1, "code": "C06", "label": "ETF与资金流向", "parent_code": "C"},
+      {"level": 1, "code": "C07", "label": "财报解读", "parent_code": "C"},
+      {"level": 1, "code": "C08", "label": "地缘政治与股市", "parent_code": "C"},
+
+      {"level": 0, "code": "D", "label": "汽车科技", "parent_code": -1},
+      {"level": 1, "code": "D01", "label": "新能源汽车", "parent_code": "D"},
+      {"level": 1, "code": "D02", "label": "智能驾驶", "parent_code": "D"},
+      {"level": 1, "code": "D03", "label": "电池技术", "parent_code": "D"},
+      {"level": 1, "code": "D04", "label": "汽车养护", "parent_code": "D"},
+      {"level": 1, "code": "D05", "label": "产业链标的", "parent_code": "D"},
+      {"level": 1, "code": "D06", "label": "车展与新品", "parent_code": "D"},
+
+      {"level": 0, "code": "E", "label": "军事地缘", "parent_code": -1},
+      {"level": 1, "code": "E01", "label": "中东局势", "parent_code": "E"},
+      {"level": 1, "code": "E02", "label": "亚太战略", "parent_code": "E"},
+      {"level": 1, "code": "E03", "label": "军工产业", "parent_code": "E"},
+      {"level": 1, "code": "E04", "label": "能源通道", "parent_code": "E"},
+      {"level": 1, "code": "E05", "label": "核问题", "parent_code": "E"},
+      {"level": 1, "code": "E06", "label": "太空竞争", "parent_code": "E"},
+
+      {"level": 0, "code": "F", "label": "生活消费", "parent_code": -1},
+      {"level": 1, "code": "F01", "label": "数码硬件评测", "parent_code": "F"},
+      {"level": 1, "code": "F02", "label": "家居建材", "parent_code": "F"},
+      {"level": 1, "code": "F03", "label": "健康医疗", "parent_code": "F"},
+      {"level": 1, "code": "F04", "label": "食品酒饮", "parent_code": "F"},
+      {"level": 1, "code": "F05", "label": "传统文化", "parent_code": "F"},
+
+      {"level": 0, "code": "G", "label": "效率工具", "parent_code": -1},
+      {"level": 1, "code": "G01", "label": "自动化脚本", "parent_code": "G"},
+      {"level": 1, "code": "G02", "label": "知识库与RAG", "parent_code": "G"},
+      {"level": 1, "code": "G03", "label": "笔记与文档", "parent_code": "G"},
+      {"level": 1, "code": "G04", "label": "时间管理", "parent_code": "G"},
+      {"level": 1, "code": "G05", "label": "开源方案评测", "parent_code": "G"},
+
+      {"level": 0, "code": "H", "label": "其他", "parent_code": -1},
+      {"level": 1, "code": "H01", "label": "待分类", "parent_code": "H"},
+      {"level": 1, "code": "H02", "label": "综合", "parent_code": "H"},
+      {"level": 1, "code": "H03", "label": "转载收藏", "parent_code": "H"}
+    ]
+  }
+}

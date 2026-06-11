@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章阅读器</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- 页面容器 -->
+    <div id="app">
+        <!-- 左侧边栏：标签筛选 -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <h2>标签筛选</h2>
+                <button id="clear-tags" class="btn-small">清空</button>
+            </div>
+            <div id="selected-tags" class="selected-tags"></div>
+            <div id="label-tree" class="label-tree">
+                <!-- 标签树由 JS 动态渲染 -->
+            </div>
+        </aside>
+
+        <!-- 右侧主区域：文章列表 -->
+        <main id="main">
+            <div class="main-header">
+                <h1>文章列表</h1>
+                <!-- 搜索框 -->
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="搜索标题..." autocomplete="off">
+                </div>
+                <span id="article-count"></span>
+            </div>
+            <div id="article-list" class="article-list">
+                <!-- 文章列表由 JS 动态渲染 -->
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

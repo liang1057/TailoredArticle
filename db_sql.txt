@@ -1,0 +1,89 @@
+-- ===========================================
+-- 文章表：存储采集到的原始文章元数据
+-- ===========================================
+CREATE TABLE IF NOT EXISTS articles (
+    -- 自增主键，唯一标识一篇文章
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- 文章原始URL，唯一约束防止重复收录
+    url TEXT UNIQUE NOT NULL,
+    -- 文章标题，解析后提取
+    title TEXT,
+    -- 本地保存路径，指向output/下的文件夹
+    local_path TEXT,
+    -- 收录时间，ISO格式字符串
+    created_at TEXT,
+    -- 来源类型：weixin/csdn/zhihu/unknown
+    source TEXT,
+    -- 下载状态 -1 未提取， 0：提取失败，1 提取成功
+    status INTEGER
+);
+
+-- ===========================================
+-- 标签定义表：存储两级分类体系
+-- ===========================================
+CREATE TABLE IF NOT EXISTS labels (
+    -- 自增主键
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- 业务编码：一级为A-H，二级为A01/A02等
+    code TEXT UNIQUE NOT NULL,
+    -- 层级：0=一级分类，1=二级标签
+    level INTEGER NOT NULL,
+    -- 父级编码：一级为NULL，二级指向父级code
+    parent_code TEXT,
+    -- 标签显示名称
+    label TEXT NOT NULL,
+    -- 标签描述，可补充说明适用范围
+    description TEXT
+);
+
+-- ===========================================
+-- 文章标签关联表：支持一篇文章打多个标签（多选）
+-- ===========================================
+CREATE TABLE IF NOT EXISTS article_labels (
+    -- 自增主键
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- 外键：关联articles.id
+    article_id INTEGER NOT NULL,
+    -- 外键：关联labels.id
+    label_id INTEGER NOT NULL,
+    -- 冗余字段：文章标题，避免查询时JOIN
+    article TEXT,
+    -- 冗余字段：标签名称，避免查询时JOIN
+    label TEXT,
+    -- 级联删除：文章或标签删除时自动清理关联
+    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY (label_id) REFERENCES labels(id) ON DELETE CASCADE,
+    -- 联合唯一约束：同一文章同一标签只能出现一次
+    UNIQUE(article_id, label_id)
+);
+
+-- ===========================================
+-- 常用查询索引，加速检索
+-- ===========================================
+-- 按URL快速查找文章
+CREATE INDEX IF NOT EXISTS idx_articles_url ON articles(url);
+-- 按来源筛选文章（如只看微信公众号）
+CREATE INDEX IF NOT EXISTS idx_articles_source ON articles(source);
+-- 按编码快速定位标签
+CREATE INDEX IF NOT EXISTS idx_labels_code ON labels(code);
+-- 按父级编码查询二级标签（如查A下的所有子标签）
+CREATE INDEX IF NOT EXISTS idx_labels_parent ON labels(parent_code);
+-- 按文章ID查其所有标签
+CREATE INDEX IF NOT EXISTS idx_article_labels_article_id ON article_labels(article_id);
+-- 按标签ID查所有关联文章
+CREATE INDEX IF NOT EXISTS idx_article_labels_label_id ON article_labels(label_id);
+
+
+-- ===========================================
+-- 分析结果表：支持智能分析
+-- ===========================================
+CREATE TABLE article_analysis (
+    article_id INTEGER PRIMARY KEY,
+    summary TEXT,           -- 摘要
+    keywords TEXT,          -- 关键词，逗号分隔
+    sentiment TEXT,         -- 情感：positive/negative/neutral
+    entities TEXT,          -- JSON：{"人名":[], "公司":[], "产品":[]}
+    analyzed_at TEXT,
+    model TEXT,             -- 使用的模型和版本
+    FOREIGN KEY (article_id) REFERENCES articles(id)
+);
