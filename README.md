@@ -200,7 +200,7 @@
 
 ## 十、 调用方法
 
-### 项目文件结构
+#### 项目文件结构
 
 ```
 TailoredArticle/
@@ -211,8 +211,16 @@ TailoredArticle/
 └── web                           # 网络浏览采集内容
 ```
 
-### 启动方法
+#### 接收URL
+```commandline
+> python .\server.py
+```
+#### 独立的文章采集
+```commandline
+> python .\collector.py
+```
 
+#### 独立的文章智能分析
 ```commandline
 > python .\analyze.py --help
 
