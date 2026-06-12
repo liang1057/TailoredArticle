@@ -1,8 +1,4 @@
-# TailoredArticle
-量身文章，打造属于自己的知识库
-
-
-**微信公众号及网页内容采集，打造属于自己的知识库**
+**微信公众号及网页内容采集系统 —— 总体设计文档（修订版）**
 
 ---
 
@@ -63,11 +59,11 @@
 
 **当前阶段**：以 **电脑本地服务为主通道**，**邮件/飞书为备用容灾**。
 
-| 场景 | 通道 | 说明 |
-|:---|:---|:---|
+| 场景 | 通道                              | 说明 |
+|:---|:--------------------------------|:---|
 | iPhone 与电脑同 WiFi | 本地服务 `http://电脑IP:5080/collect` | 主通道，实时、无延迟 |
-| iPhone 在外（不同 WiFi/4G） | 备用通道：邮件发给自己 / 飞书机器人 | 延迟处理，电脑开机后补录 |
-| PC 浏览器 | 直接访问本地服务或书签脚本 POST | 与 iPhone 共用同一接口 |
+| iPhone 在外（不同 WiFi/4G） | 备用通道：邮件发给自己 / 飞书机器人             | 延迟处理，电脑开机后补录 |
+| PC 浏览器 | 直接访问本地服务或书签脚本 POST              | 与 iPhone 共用同一接口 |
 
 **树莓派迁移规划**：
 
@@ -117,9 +113,9 @@
 │   │   │   │       └── 002.jpg
 │   │   │   └── 文章标题B/
 │   │   └── 2026-06-09/
-│   ├── csdn/                     # CSDN 文章(例如，预留)
+│   ├── csdn/                     # CSDN 文章
 │   ├── zhihu/                    # 知乎文章（预留）
-│   └── unknown/                  # 未识别来源（预留）
+│   └── unknown/                  # 未识别来源
 └── index.db                      # SQLite 索引：URL、标题、保存时间、本地路径、是否已读
 ```
 
@@ -202,3 +198,34 @@
 | Android 当前不开发，预留接口 | ✅ 已确认 |
 | 接受安装 Python + Playwright | ✅ 已确认 |
 
+## 十、 调用方法
+
+### 项目文件结构
+
+```
+TailoredArticle/
+├── server.py                     # 主服务
+├── collector.py                  # 采集方法
+├── tools.py                      # 工具性方法，如判断网页正文何时结尾
+├── analyze.py                    # 智能分析，分类打标签、提取摘要、关键词等
+└── web                           # 网络浏览采集内容
+```
+
+### 启动方法
+
+```commandline
+> python .\analyze.py --help
+
+usage: analyze.py [-h] [-m {all,one,loop}] [-id [ID]] [-s SLEEP]
+optional arguments:
+  -h, --help            show this help message and exit
+  -m {all,one,loop}, --mode {all,one,loop}
+                        命令：all=分析所有未分析文章，one=分析指定ID文章, loop=定时循环分析所有未分析文章
+  -id [ID]              文章ID（仅当mode=one时有效）
+  -s SLEEP, --sleep SLEEP
+                        循环分析间隔秒数（仅当mode=loop时有效）
+                        
+> python .\ananalyze.py -m one -id 1
+> python .\ananalyze.py -m all
+> python .\analyze.py -m loop -s 3600
+```

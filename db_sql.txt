@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS articles (
     -- 收录时间，ISO格式字符串
     created_at TEXT,
     -- 来源类型：weixin/csdn/zhihu/unknown
-    source TEXT,
+    source TEXT
     -- 下载状态 -1 未提取， 0：提取失败，1 提取成功
     status INTEGER
 );
@@ -77,7 +77,7 @@ CREATE INDEX IF NOT EXISTS idx_article_labels_label_id ON article_labels(label_i
 -- ===========================================
 -- 分析结果表：支持智能分析
 -- ===========================================
-CREATE TABLE article_analysis (
+CREATE TABLE IF NOT EXISTS article_analysis (
     article_id INTEGER PRIMARY KEY,
     summary TEXT,           -- 摘要
     keywords TEXT,          -- 关键词，逗号分隔

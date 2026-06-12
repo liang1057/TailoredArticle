@@ -36,7 +36,6 @@ INBOX_FILE = os.path.join(WORKSPACE, "inbox", "urls_pending.txt")
 DB_PATH = os.path.join(WORKSPACE, "index.db")
 
 # 数据库 schema 配置文件路径（JSON格式，含建表SQL和标签数据）
-SCHEMA_PATH = os.path.join(BASE_DIR, "data_base.json")
 DB_SQL_PATH = os.path.join(BASE_DIR, "db_sql.txt")
 DB_DATA_JSON_PATH = os.path.join(BASE_DIR, 'data_base.json')
 
@@ -224,8 +223,8 @@ def download_weixin(page, url, save_dir):
 
     # 找到正文边界，截断推荐区
     boundary = find_content_boundary(blocks_raw)
-    content_blocks = blocks_raw[:boundary]
-    promo_blocks = blocks_raw[boundary:]  # 丢弃
+    promo_blocks = blocks_raw[boundary:]  # 丢弃的块
+    content_blocks = blocks_raw[:boundary] # 保留的块
 
     if promo_blocks:
         print(f"  [截断] 丢弃推荐区 {len(promo_blocks)} 个块")
@@ -236,7 +235,7 @@ def download_weixin(page, url, save_dir):
     images_dir = os.path.join(save_dir, "images")
     os.makedirs(images_dir, exist_ok=True)
 
-    for block in blocks_raw:
+    for block in content_blocks:   # 保留的块进行遍历，保存起来
         tag = block.get('tag', '')
 
         # 图片块

@@ -334,45 +334,40 @@ def analyze_all(limit=None):
 
 # ==================== 命令行入口 ====================
 if __name__ == '__main__':
-    # analyze_one(1)
 
-    analyze_all()
+    '''
+    # 测试代码
+    # analyze_one(id = 1)
+    # analyze_all()
+    '''
+
+    # 解析命令行参数， 生产代码
+    import argparse
+
+    # 首先添加一些自定义的命令
+    parser = argparse.ArgumentParser(description="文章分析工具")
+    parser.add_argument("-m", "--mode", choices=["all", "one", "loop"],
+                        help="命令：all=分析所有未分析文章，one=分析指定ID文章, loop=循环分析所有文章",
+                        default="all")
+    parser.add_argument("-id", nargs="?", help="文章ID（仅当mode=one时有效）")
+    parser.add_argument("-s", "--sleep", type=int, help="循环分析间隔秒数（仅当mode=loop时有效）")
+    args = parser.parse_args()
+
+    # 判断是从命令行调用还是直接运行
+    if args.mode == "all":  # 分析所有未分析文章
+        analyze_all()
+    elif args.mode == "one": # 分析指定ID文章
+        analyze_one(args.id)
+    elif args.mode == "loop": # 循环分析所有文章
+        while True:
+            analyze_all()
+            time.sleep(args.sleep or 3600)  # 默认1小时
+    else: # 未知命令
+        print("[错误] 未知命令")
+        parser.print_help()
+        exit(1)
 
 
-    # # 测试
-    # # 1. 分析单篇文章
-    # analyze_one(1)
-    # # 2. 分析前N篇文章
-    # analyze_all(3)
-    # # 3. 分析指定ID文章
-    # analyze_one(123)
-    # # 4. 分析指定title的文章
-    # analyze_one(title="测试标题")
-
-
-    # 命令行入口的替代用法（取消注释即可启用）：
-    # - python analyze.py all          分析所有未分析文章
-    # - python analyze.py all 10       分析前10篇
-    # - python analyze.py one 123      分析指定ID文章
 
 
 
-
-    # import sys
-    #
-    # if len(sys.argv) < 2:
-    #     print("用法：")
-    #     print("  python analyze.py all          # 分析所有未分析文章")
-    #     print("  python analyze.py all 10       # 分析前10篇")
-    #     print("  python analyze.py one 123      # 分析指定ID文章")
-    #     sys.exit(1)
-    #
-    # cmd = sys.argv[1]
-    #
-    # if cmd == 'all':
-    #     limit = int(sys.argv[2]) if len(sys.argv) > 2 else None
-    #     analyze_all(limit)
-    # elif cmd == 'one' and len(sys.argv) > 2:
-    #     analyze_one(int(sys.argv[2]))
-    # else:
-    #     print("参数错误")

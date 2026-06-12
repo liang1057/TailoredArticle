@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文章阅读器</title>
     <link rel="stylesheet" href="/static/style.css">
+<base target="_blank">
 </head>
 <body>
-    <!-- 页面容器 -->
+    <!-- 页面容器：三栏布局 -->
     <div id="app">
         <!-- 左侧边栏：标签筛选 -->
         <aside id="sidebar">
@@ -21,7 +22,10 @@
             </div>
         </aside>
 
-        <!-- 右侧主区域：文章列表 -->
+        <!-- 左分割线 -->
+        <div class="resizer" id="resizer-left"></div>
+
+        <!-- 中部主区域：文章列表 -->
         <main id="main">
             <div class="main-header">
                 <h1>文章列表</h1>
@@ -35,6 +39,19 @@
                 <!-- 文章列表由 JS 动态渲染 -->
             </div>
         </main>
+
+        <!-- 右分割线 -->
+        <div class="resizer" id="resizer-right"></div>
+
+        <!-- 右侧边栏：文章摘要详情 -->
+        <aside id="sidebar-right">
+            <div class="sidebar-right-header">
+                <h2>文章摘要</h2>
+            </div>
+            <div id="article-detail" class="article-detail">
+                <div class="detail-placeholder">点击文章右侧「摘要」按钮查看详情</div>
+            </div>
+        </aside>
     </div>
 
     <script src="/static/script.js"></script>
