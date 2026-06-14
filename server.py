@@ -2,7 +2,7 @@
 本地接收服务
 - 监听 0.0.0.0:5000
 - 接收 POST /collect，JSON Body: {"url": "..."}
-- 追加保存到 采集库/inbox/urls_pending.txt
+- 追加保存到 采集库/inbox/urls_pending.txt    , 由 collector 进程去读取并处理
 - 开启 CORS，支持浏览器书签跨域发送
 """
 

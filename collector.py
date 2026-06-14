@@ -222,12 +222,15 @@ def download_weixin(page, url, save_dir):
     }""")
 
     # 找到正文边界，截断推荐区
-    boundary = find_content_boundary(blocks_raw)
-    promo_blocks = blocks_raw[boundary:]  # 丢弃的块
+    boundary = max(2, find_content_boundary(blocks_raw))
     content_blocks = blocks_raw[:boundary] # 保留的块
 
-    if promo_blocks:
-        print(f"  [截断] 丢弃推荐区 {len(promo_blocks)} 个块")
+    try:
+        promo_blocks = blocks_raw[boundary:]  # 丢弃的块
+        if promo_blocks:
+            print(f"  [截断] 丢弃推荐区 {len(promo_blocks)} 个块")
+    except:
+        pass
 
     # 第二步：Python 处理每个块，转换为 Markdown
     md_lines = []
