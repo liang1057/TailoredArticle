@@ -20,7 +20,6 @@ body {
     width: 100vw;
 }
 
-/* 左侧边栏 */
 #sidebar {
     width: 20%;
     min-width: 180px;
@@ -32,7 +31,6 @@ body {
     flex-shrink: 0;
 }
 
-/* 中部主区域 */
 #main {
     flex: 1;
     display: flex;
@@ -41,7 +39,6 @@ body {
     min-width: 300px;
 }
 
-/* 右侧边栏 */
 #sidebar-right {
     width: 20%;
     min-width: 200px;
@@ -53,7 +50,6 @@ body {
     flex-shrink: 0;
 }
 
-/* 分割线 */
 .resizer {
     width: 4px;
     background: #e0e0e0;
@@ -67,7 +63,7 @@ body {
     background: #1976d2;
 }
 
-/* ===== 左侧边栏内容 ===== */
+/* ===== 左侧边栏 ===== */
 .sidebar-header {
     padding: 12px 16px;
     border-bottom: 1px solid #e0e0e0;
@@ -215,7 +211,6 @@ body {
     padding: 12px 16px;
 }
 
-/* 文章项 */
 .article-item {
     background: #fff;
     border-radius: 6px;
@@ -317,7 +312,7 @@ body {
     font-size: 10px;
 }
 
-/* 第三行：来源日期(左) + 原文链接(右) */
+/* 第三行：来源日期(左) + 操作按钮(右) */
 .article-meta-row-bottom {
     display: flex;
     justify-content: space-between;
@@ -342,6 +337,12 @@ body {
     color: #bbb;
 }
 
+.article-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
 .article-link {
     font-size: 8pt;
     color: #1976d2;
@@ -351,6 +352,24 @@ body {
 
 .article-link:hover {
     text-decoration: underline;
+}
+
+/* 删除按钮 */
+.btn-delete {
+    padding: 2px 8px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #999;
+    border-radius: 4px;
+    font-size: 8pt;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-delete:hover {
+    background: #ffebee;
+    color: #c62828;
+    border-color: #ef9a9a;
 }
 
 /* ===== 右侧边栏 ===== */
@@ -379,7 +398,6 @@ body {
     line-height: 1.6;
 }
 
-/* 右侧详情内容 */
 .detail-content {
     display: flex;
     flex-direction: column;
@@ -485,7 +503,6 @@ body {
     color: #333;
 }
 
-/* ===== 工具类 ===== */
 .hidden {
     display: none !important;
 }

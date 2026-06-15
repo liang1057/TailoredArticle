@@ -976,10 +976,6 @@ def process_single_url(url, browser):
         tmp_status = 0
         print(f"【提示】之前有记录但是下载失败，重新下载")
         article_id = row[0]
-        # print(f"[跳过] 已收录: {url[:60]}...")
-        # conn.close()
-        # return
-
 
     # 插入文章记录，获取自增 ID
     now = datetime.now().isoformat()

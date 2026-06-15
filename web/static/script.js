@@ -1,19 +1,25 @@
 /**
- * read 应用前端逻辑 v2.0
+ * read 应用前端逻辑 v3.0
  * - 三栏布局 + 可拖拽分割线
  * - 标签树渲染与多选（OR/并集查询）
  * - 文章列表：标题行 + 元信息行 + 操作行
  * - 右侧边栏：点击「摘要」按钮显示文章详情
+ * - 删除功能
  */
 
 // ===== 状态 =====
-let selectedTagIds = new Set();  // 当前选中的标签ID
-let currentQuery = '';            // 当前搜索关键词
-let allLabels = [];               // 缓存所有标签
-let currentArticles = [];         // 缓存当前文章列表
+let selectedTagIds = new Set();
+let currentQuery = '';
+let allLabels = [];
+let currentArticles = [];
+let authToken = '';  // 从 URL 提取的 token
 
 // ===== 初始化 =====
 document.addEventListener('DOMContentLoaded', () => {
+    // 从 URL 提取 token，后续所有请求都带上
+    const urlParams = new URLSearchParams(window.location.search);
+    authToken = urlParams.get('token') || '';
+
     loadLabels();
     loadArticles();
     bindEvents();
@@ -22,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ===== 事件绑定 =====
 function bindEvents() {
-    // 清空标签
     document.getElementById('clear-tags').addEventListener('click', () => {
         selectedTagIds.clear();
         document.querySelectorAll('.label-checkbox input').forEach(cb => cb.checked = false);
@@ -30,7 +35,6 @@ function bindEvents() {
         loadArticles();
     });
 
-    // 搜索框输入（防抖）
     let searchTimer;
     document.getElementById('search-input').addEventListener('input', (e) => {
         clearTimeout(searchTimer);
@@ -41,7 +45,14 @@ function bindEvents() {
     });
 }
 
-// ===== 拖拽分割线初始化 =====
+// ===== 带 token 的 fetch 封装 =====
+function fetchWithToken(url, options = {}) {
+    const sep = url.includes('?') ? '&' : '?';
+    const fullUrl = `${url}${sep}token=${encodeURIComponent(authToken)}`;
+    return fetch(fullUrl, options);
+}
+
+// ===== 拖拽分割线 =====
 function initResizers() {
     const app = document.getElementById('app');
     const sidebar = document.getElementById('sidebar');
@@ -50,9 +61,7 @@ function initResizers() {
     const resizerLeft = document.getElementById('resizer-left');
     const resizerRight = document.getElementById('resizer-right');
 
-    // 左分割线：调整 sidebar 和 main
     initResizer(resizerLeft, sidebar, main, 'left');
-    // 右分割线：调整 main 和 sidebarRight
     initResizer(resizerRight, main, sidebarRight, 'right');
 }
 
@@ -75,13 +84,11 @@ function initResizer(resizer, panelBefore, panelAfter, side) {
             const dx = e.clientX - startX;
 
             if (side === 'left') {
-                // 左分割线：调整 sidebar 宽度，main 自适应
                 let newWidth = startWidthBefore + dx;
                 newWidth = Math.max(180, Math.min(newWidth, containerWidth * 0.4));
                 panelBefore.style.width = newWidth + 'px';
                 panelBefore.style.flex = 'none';
             } else {
-                // 右分割线：调整 sidebarRight 宽度，main 自适应
                 let newWidth = startWidthAfter - dx;
                 newWidth = Math.max(180, Math.min(newWidth, containerWidth * 0.4));
                 panelAfter.style.width = newWidth + 'px';
@@ -106,7 +113,7 @@ function initResizer(resizer, panelBefore, panelAfter, side) {
 // ===== 加载标签树 =====
 async function loadLabels() {
     try {
-        const res = await fetch('/api/labels');
+        const res = await fetchWithToken('/api/labels');
         allLabels = await res.json();
         renderLabelTree(allLabels);
     } catch (e) {
@@ -123,7 +130,6 @@ function renderLabelTree(labels) {
         const groupDiv = document.createElement('div');
         groupDiv.className = 'label-group';
 
-        // 一级标签头部（可展开）
         const header = document.createElement('div');
         header.className = 'label-group-header';
         header.innerHTML = `
@@ -132,7 +138,6 @@ function renderLabelTree(labels) {
         `;
         header.addEventListener('click', () => toggleGroup(header, childrenDiv));
 
-        // 二级标签容器（默认隐藏）
         const childrenDiv = document.createElement('div');
         childrenDiv.className = 'label-children hidden';
 
@@ -161,11 +166,9 @@ function renderLabelTree(labels) {
     });
 }
 
-// ===== 展开/收起标签组 =====
 function toggleGroup(header, childrenDiv) {
     const icon = header.querySelector('.toggle-icon');
     const isExpanded = icon.classList.contains('expanded');
-
     if (isExpanded) {
         icon.classList.remove('expanded');
         childrenDiv.classList.add('hidden');
@@ -175,7 +178,6 @@ function toggleGroup(header, childrenDiv) {
     }
 }
 
-// ===== 更新已选标签显示 =====
 function updateSelectedTags() {
     const container = document.getElementById('selected-tags');
     container.innerHTML = '';
@@ -216,7 +218,7 @@ async function loadArticles() {
         }
 
         const url = params.toString() ? `/api/articles?${params}` : '/api/articles';
-        const res = await fetch(url);
+        const res = await fetchWithToken(url);
         const articles = await res.json();
         currentArticles = articles;
 
@@ -235,18 +237,15 @@ async function loadArticles() {
             item.className = 'article-item';
             item.dataset.id = article.id;
 
-            // 解析关键词（逗号分隔，最多显示5个）
             const keywords = (article.keywords || '').split(',').filter(k => k.trim()).slice(0, 5);
+            const shareId = article.share_id || '';
 
-            // 构建文章控件 HTML
             item.innerHTML = `
                 <div class="article-item-inner">
-                    <!-- 第一行：标题 + 摘要按钮 -->
                     <div class="article-title-row">
-                        <div class="article-title-text">${escapeHtml(article.title)}</div>
+                        <div class="article-title-text" data-share-id="${shareId}">${escapeHtml(article.title)}</div>
                         <button class="btn-summary" data-id="${article.id}">摘要</button>
                     </div>
-                    <!-- 第二行：关键词(左) + 分类标签(右) -->
                     <div class="article-tags-row">
                         <div class="article-keywords-inline">
                             ${keywords.map(k => `<span class="keyword-tag-inline">${escapeHtml(k.trim())}</span>`).join('')}
@@ -255,29 +254,41 @@ async function loadArticles() {
                             ${article.tags.map(t => `<span class="cat-tag">${t.label}</span>`).join('')}
                         </div>
                     </div>
-                    <!-- 第三行：来源日期(左) + 原文链接(右) -->
                     <div class="article-meta-row-bottom">
                         <div class="article-meta-left">
                             <span class="article-source">来源: ${article.source || '未知'}</span>
                             <span class="article-date">${formatDate(article.created_at)}</span>
                         </div>
-                        <a href="${article.url}" target="_blank" class="article-link" onclick="event.stopPropagation()">原文链接</a>
+                        <div class="article-actions">
+                            <a href="${article.url}" target="_blank" class="article-link" onclick="event.stopPropagation()">原文链接</a>
+                            <button class="btn-delete" data-id="${article.id}" onclick="event.stopPropagation()">删除</button>
+                        </div>
                     </div>
                 </div>
             `;
 
-            // 点击标题：在新窗口打开文章阅读页
+            // 点击标题：通过 share_id 打开文章阅读页
             const titleEl = item.querySelector('.article-title-text');
             titleEl.addEventListener('click', (e) => {
                 e.stopPropagation();
-                window.open(`/article/${article.id}`, '_blank');
+                const sid = titleEl.dataset.shareId;
+                if (sid) {
+                    window.open(`/article/${sid}`, '_blank');
+                }
             });
 
-            // 点击「摘要」按钮：在右侧边栏显示摘要
+            // 点击「摘要」按钮
             const summaryBtn = item.querySelector('.btn-summary');
             summaryBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 showArticleDetail(article.id);
+            });
+
+            // 点击「删除」按钮
+            const deleteBtn = item.querySelector('.btn-delete');
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteArticle(article.id, article.title);
             });
 
             list.appendChild(item);
@@ -287,14 +298,38 @@ async function loadArticles() {
     }
 }
 
+// ===== 删除文章 =====
+async function deleteArticle(articleId, title) {
+    if (!confirm(`确定删除文章「${title || '未命名'}」？\n将同时删除本地文件和关联记录。`)) {
+        return;
+    }
+    try {
+        const res = await fetchWithToken(`/api/article/${articleId}`, { method: 'DELETE' });
+        if (res.ok) {
+            // 从右侧边栏移除（如果当前显示的是这篇文章）
+            const detail = document.getElementById('article-detail');
+            if (detail.querySelector('.detail-content')) {
+                const detailTitle = detail.querySelector('.detail-title');
+                if (detailTitle && currentArticles.find(a => a.id === articleId)?.title === detailTitle.textContent) {
+                    detail.innerHTML = '<div class="detail-placeholder">点击文章右侧「摘要」按钮查看详情</div>';
+                }
+            }
+            loadArticles();
+        } else {
+            alert('删除失败');
+        }
+    } catch (e) {
+        console.error('删除失败:', e);
+        alert('删除失败');
+    }
+}
+
 // ===== 在右侧边栏显示文章详情 =====
 function showArticleDetail(articleId) {
     const article = currentArticles.find(a => a.id === articleId);
     if (!article) return;
 
     const container = document.getElementById('article-detail');
-
-    // 解析关键词
     const keywords = (article.keywords || '').split(',').filter(k => k.trim());
 
     container.innerHTML = `
@@ -316,7 +351,7 @@ function showArticleDetail(articleId) {
             </div>
             <div class="detail-actions">
                 <a href="${article.url}" target="_blank" class="detail-link">查看原文 ↗</a>
-                <a href="/article/${article.id}" target="_blank" class="detail-link">阅读全文 ↗</a>
+                <a href="/article/${article.share_id}" target="_blank" class="detail-link">阅读全文 ↗</a>
             </div>
         </div>
     `;

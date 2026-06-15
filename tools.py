@@ -6,7 +6,7 @@ PROMO_KEYWORDS = [
     '扫码', '关注', '加好友', '觉得好看', '点这里', '联系我们',
     '转载请联系', '来源：', '本期编辑', 'END', '历史文章',
     '推荐阅读', '相关文章', '精选内容', '点击在看', '分享朋友圈',
-    '原文链接', '阅读原文', '加入群', '获取资料', '免费领取'
+    '原文链接', '阅读原文', '加入群', '获取资料', '免费领取', '有问题欢迎留言'
 ]
 
 # 推荐区判定阈值
@@ -61,6 +61,29 @@ def find_content_boundary(blocks):
         return 0
 
     n = len(blocks)
+
+    tip_is_promo = [False] * n
+    for i in range(n-1, -1, -1):
+        block = blocks[i]
+        if is_promo_block(block.get('text', ''), block.get('html', '')):
+            tip_is_promo[i] = True
+
+    # 按窗口从后向前查看，如果推荐性的多，则认为是推荐区
+    for i in range(n-1, -1, -1):
+        window = tip_is_promo[i:min(i + PROMO_WINDOW_SIZE, n)]
+        if sum(window) >= PROMO_KEYWORD_MATCH:
+            if tip_is_promo[i] and sum(window) > PROMO_KEYWORD_MATCH:
+                tip_is_promo[i:i+len(window)] = [True]*len(window)
+
+    boundary = n-1
+    for i in range(n - 1, -1, -1):
+        if tip_is_promo[i]:
+            boundary = i
+        else:
+            break
+    return boundary
+
+
     # 从底部开始，维护滑动窗口
     for i in range(n - 1, -1, -1):
         # 检查从 i 到末尾的窗口

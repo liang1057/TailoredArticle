@@ -4,6 +4,8 @@
 CREATE TABLE IF NOT EXISTS articles (
     -- 自增主键，唯一标识一篇文章
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- 文章读取的UUID,用来反爬显示和分享，根据文章数量来推算，使用8位UUID即可
+    share_id TEXT
     -- 文章原始URL，唯一约束防止重复收录
     url TEXT UNIQUE NOT NULL,
     -- 文章标题，解析后提取
@@ -16,8 +18,6 @@ CREATE TABLE IF NOT EXISTS articles (
     source TEXT
     -- 下载状态 -1 未提取， 0：提取失败，1 提取成功
     status INTEGER
-    -- 文章读取的UUID,用来反爬显示和分享，根据文章数量来推算，使用8位UUID即可
-    share_id TEXT
 );
 
 -- ===========================================

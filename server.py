@@ -41,4 +41,12 @@ def collect():
 if __name__ == '__main__':
     # host='0.0.0.0' 允许局域网内其他设备访问
     # 树莓派迁移时，此文件原样复制即可运行
-    app.run(host='0.0.0.0', port=5080, debug=False)
+    #app.run(host='0.0.0.0', port=5080, debug=False)
+    # 如果命令行输入参数 --port , 则port按照输入参数进行设置
+    import sys
+    if '--port' in sys.argv:
+        port = int(sys.argv[sys.argv.index('--port') + 1])  # 配置文件中是5081，用于持久化运行
+        print(f"量身文章采集服务 port: {port}")
+    else:
+        port = 4081  # 默认端口号，用于调试
+    app.run(host='0.0.0.0', port=port, debug=False)
